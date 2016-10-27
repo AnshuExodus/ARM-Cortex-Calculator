@@ -1,0 +1,173 @@
+//DiceProblem
+
+#include "LPC17xx.h" // Device header
+
+#define EN_CTRL 0x10000000 //P0.28 as Enable line
+#define RS_CTRL 0x08000000 //P0.27 as Command line
+#define DT_CTRL 0x07800000 //P0.23 to P0.26 as Data lines
+uint32_t temp11 = 0, temp21 = 0;
+uint32_t uint32_pow(uint32_t a, uint32_t b)
+{
+	while ( --b )
+	a *= a;
+	return a;
+}
+void LCD_Delay(uint32_t diff) 
+{ 
+	while(--diff > 0); 
+}
+void LCD_ClearPorts(void)
+{
+	LPC_GPIO0->FIOCLR = EN_CTRL; // Clearing Enable line
+	LPC_GPIO0->FIOCLR = RS_CTRL; // Clearing Command line
+	LPC_GPIO0->FIOCLR = DT_CTRL; // Clearing Data lines
+}
+// command nibble o/p routine
+void wr_cmd(void) //Writing command reg
+{ 
+	LCD_ClearPorts();
+	LPC_GPIO0->FIOPIN = temp21; // Assigning the value to the data
+	//lines 
+	LPC_GPIO0->FIOCLR = RS_CTRL; // clearing RS bit
+	LPC_GPIO0->FIOSET = EN_CTRL; // EN=1
+	LCD_Delay(25);
+	LPC_GPIO0->FIOCLR = EN_CTRL; // EN =0
+}
+// data nibble o/p routine
+void wr_dn(void)
+{ 
+	LCD_ClearPorts();
+	
+	LPC_GPIO0->FIOPIN = temp21; // Assign the value to the
+	//data lines 
+	LPC_GPIO0->FIOSET = RS_CTRL; // set bit RS
+	LPC_GPIO0->FIOSET = EN_CTRL; // EN=1
+	LCD_Delay(25);
+	LPC_GPIO0->FIOCLR = EN_CTRL; // EN =0
+}
+// data o/p routine which also outputs high nibble first
+// And Lower Nibble Next
+void LCD_Data(void)
+{ 
+	temp21 = temp11 & 0xf0;
+	temp21 = temp21 << 19;
+	wr_dn();
+	temp21= temp11 & 0x0f; 
+	temp21= temp21 << 23;
+	wr_dn();
+	LCD_Delay(1000);
+}
+void LCD_Com(void)
+{
+	temp21 = temp11 & 0xf0;//move data (26-8+1) times : 26 - HN
+	//place, 4 - Bits
+	temp21 = temp21 << 19; //data lines from 23 to 26
+	wr_cmd();
+	temp21 = temp11 & 0x0f; //26-4+1
+	temp21 = temp21 << 23;
+	wr_cmd();
+	LCD_Delay(1000);
+}
+void LCD_ClearDisplay(void)
+{
+	temp11 = 0x01;
+	LCD_Com();
+	LCD_Delay(10000);
+}
+void LCD_Puts(unsigned char *buf)
+{
+	unsigned int i = 0;
+	while(buf[i] != '\0')
+	{
+		temp11 = buf[i];
+		LCD_Data();
+		i++;
+		if(i==16)
+		{
+			temp11 = 0xc0;
+			LCD_Com();
+		}
+	}
+}
+void LCD_Init(void)
+{
+	LPC_PINCON->PINSEL1 &= 0xFC003FFF; //P0.23 to P0.28 -> GPIO
+
+	LPC_GPIO0->FIODIR |= EN_CTRL; // Set Enable line OUTPUT
+	LPC_GPIO0->FIODIR |= RS_CTRL; // Set command line OUTPUT
+	LPC_GPIO0->FIODIR |= DT_CTRL; // Set data lines OUTPUT
+
+	LCD_ClearPorts();
+	LCD_Delay(3200);
+
+	temp21 = (0x30<<19);
+	wr_cmd(); 
+	LCD_Delay(30000);
+
+	temp21 = (0x30<<19);
+	wr_cmd();
+	LCD_Delay(30000); 
+
+	temp21 = (0x30<<19);
+	wr_cmd();
+	LCD_Delay(30000);
+
+	temp21 = (0x20<<19);
+	wr_cmd();
+	LCD_Delay(30000);
+
+	temp11 = 0x28;
+	LCD_Com();
+	LCD_Delay(30000);
+
+	temp11 = 0x0c; 
+	LCD_Com();
+	LCD_Delay(800);
+
+	temp11 = 0x06;
+	LCD_Com();
+	LCD_Delay(800);
+
+	temp11 = 0x01;
+	LCD_Com();
+	LCD_Delay(10000);
+
+	temp11 = 0x80;
+	LCD_Com();
+	LCD_Delay(800);
+}
+void EINT2_IRQHandler(void)
+{
+	// Generating Random Number ( Using TIMER )
+	unsigned char msg[2];
+	msg[0] = 48 + (1 + (rand() % 6)); // num in ASCII
+	msg[1] = '\0';
+
+	// Displaying on LCD
+	temp11 = 0x80;
+	LCD_Com();
+	LCD_Delay(800);
+	LCD_Puts(&msg[0]);
+
+	LPC_SC->EXTINT = 0x04; // reset for EINT2 ( 0100 )
+}
+
+int main(void)
+{
+	SystemInit();
+	SystemCoreClockUpdate();
+
+	// Initializing the LCD
+	LCD_Init();
+
+	// Configuring External Interrupt
+	NVIC_EnableIRQ(EINT2_IRQn); // Setting IRQ in NVIC for EINT2
+	// set P2.12 (CNB Pin 7) as '01' -> EINT2 (Input at SW2 - CNB1 Pin 7)
+	LPC_PINCON->PINSEL4 &= 0xFDFFFFFF;
+	LPC_PINCON->PINSEL4 |= 0x01000000;
+	LPC_SC->EXTINT = 0x04; // set for EINT2 ( 0100 )
+	LPC_SC->EXTMODE = 0x04; // set edge-sensitive mode ( 0100 )
+	LPC_SC->EXTPOLAR = 0x04; // set rising edge interrupt ( 0100 )
+
+	while(1);
+}

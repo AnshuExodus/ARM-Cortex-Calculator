@@ -1,0 +1,91 @@
+#include<LPC17xx.h>
+ 
+void pwm_init(void);
+ 
+void PWM1_IRQHandler(void);
+ 
+unsigned long int i;
+double inten=1;
+unsigned int MR_val;
+ 
+
+int main(void)
+{
+	SystemInit();
+	SystemCoreClockUpdate();
+	pwm_init();
+
+	//Keyboard Interrupt Generate
+
+	LPC_GPIOINT->IO0IntEnR=(0X0F<<4); //GPIO Interrupt on P0.4,5,6,7 checks column
+	LPC_GPIO2->FIOMASK=(0X0F<<4);
+	NVIC_EnableIRQ(EINT3_IRQn);
+
+	while(1)
+	{
+		for(i=0;i<=1000;i++); //delay
+	}
+}
+ 
+void EINT3_IRQHandler(void)
+{
+
+	for(i=0;i<5000;i++);
+
+	i=LPC_GPIOINT->IO0IntStatR;
+	i=i&(0x0F<<4);
+	i=i>>4;
+
+	if(i==0X01)
+	{
+		inten=0.1; //Intensity=10% of original
+		LPC_GPIOINT->IO0IntClr=0X01;
+	}
+	else if(i==0x02)
+	{
+		inten=0.25; //Intensity=25% of original
+		LPC_GPIOINT->IO0IntClr=0X02;
+	}
+	else if(i==0X04) 
+	{ 
+		inten=0.5; //Intensity=50% of original
+		LPC_GPIOINT->IO0IntClr=0X04;
+	}
+	else if(i==0x08)
+	{
+		inten=0.75; //Intensity=75% of original
+		LPC_GPIOINT->IO0IntClr=0x08;
+	}
+
+}
+ 
+void pwm_init(void)
+{
+	//PWM Section
+	LPC_SC->PCONP|=(1<<6); //PWM1 is powered on
+	LPC_PINCON->PINSEL3&=~(0X0000C000); //Cleared if any other functions are enabled
+	LPC_PINCON->PINSEL3|=0X00008000; //PWM 1.4 is selected for the pins P1.23
+	LPC_PWM1->PR=0X00000000; //COUNT FREQUENCY: Frequency of PCLK
+	LPC_PWM1->PCR=0X00001000; //SELECT PWM1.4 Single Edge
+	LPC_PWM1->MCR=0X00000003; //RESET AND INTERRUPT ON PWMMR0
+	LPC_PWM1->MR0=30000; //SETUP MATCH REGISTER 0 COUNT
+	LPC_PWM1->MR4=20000; //SETUP MATCH REGISTER MR1
+	LPC_PWM1->LER=0X000000FF; //ENABLE SHADOW COPY REGISTER
+	LPC_PWM1->TCR=0X00000002; //RESET COUNTER AND PRESCALER
+	LPC_PWM1->TCR=0X00000009; //ENABLE PWM AND COUNTER
+	MR_val=LPC_PWM1->MR4; //Recording the Original value of MR4
+	NVIC_EnableIRQ(PWM1_IRQn); //Enabling PWM Interrupt
+	return;
+}
+ 
+void PWM1_IRQHandler(void)
+{
+	unsigned int MR_val1;
+	MR_val1=MR_val;
+	LPC_PWM1->IR=0XFF;
+
+	LPC_PWM1->MR4=MR_val1*inten;
+
+	LPC_PWM1->LER=0X0FF;
+
+}
