@@ -1,17 +1,13 @@
 /*
-CCE A2
-EMBEDDED SYSTEMS PROJECT
-
-RISHIKESH KULKARNI
-GEORGE MAMMEN JACOB
-AYUSH VERMA
-
-
+IT A : 56,57,58
+Anshuman Mishra
+Aaditya Jamuar	
+Rashmi Shreekumar
 */
 
-#include<LPC17xx.h>
-#include<stdio.h>
-#include<stdlib.h>
+#include <LPC17xx.h>
+#include <stdio.h>
+#include <stdlib.h>
 #define RS_CTRL 0x08000000 //P0.27
 #define EN_CTRL 0x10000000 //P0.28
 #define DT_CTRL 0x07800000 //P0.23 to P0.26 data lines
@@ -19,8 +15,6 @@ AYUSH VERMA
 #define MASK_ROWS 0XF00; 	//P0.8 to P0.11 are connected to rows
 #define MASK_COLS 0XF0;		//P0.4 to P0.7 are connected to columns
 #define MASK_DISP 0X1F800000; //LCD Display is from P0.23 to P0.28
-
-
 
 
 void lcd_init(void);
@@ -76,9 +70,9 @@ int main(void)
 	NVIC_EnableIRQ(EINT3_IRQn);
 
 
-   LPC_GPIO0->FIOMASK= 0X1F800000;
-	 LPC_GPIO0->FIOPIN= MASK_ROWS; //Set All rows as 1
-	 LPC_GPIO0->FIOMASK=0X0;
+   	LPC_GPIO0->FIOMASK= 0X1F800000;
+	LPC_GPIO0->FIOPIN= MASK_ROWS; //Set All rows as 1
+	LPC_GPIO0->FIOMASK=0X0;
 	while(1); //Poll till interrupt is generated
 }
 void display(void)
@@ -100,39 +94,36 @@ void display(void)
 		}
 	else if(temp==10) //To accept the number entered
 		{
-		sum[count]=num;
-		count++;
-		num=0;
-		pos=1;
-		LCD_ACCEPT();
-		for(j=0;j<3000;j++);
+			sum[count]=num;
+			count++;
+			num=0;
+			pos=1;
+			LCD_ACCEPT();
+			for(j=0;j<3000;j++);
 		}
 	else if(temp==11) //To make a correction to the displayed number
 		{
-		if(pos==1)
-			num=0;
-		else
-		{
-		num=num/10;
-		pos=pos/10;
-		}
+			if(pos==1)
+				num=0;
+			else
+			{
+				num=num/10;
+				pos=pos/10;
+			}
 
-		LCD_DATA1();
-		for(j=0;j<3000;j++);
+			LCD_DATA1();
+			for(j=0;j<3000;j++);
 		}
 	if(temp==12||MAX==count) //Get and display the final sum
 		{
-		for(i=0;i<count;i++)
-		final_val=final_val+sum[i];
-
+			for(i=0;i<count;i++)
+				final_val=final_val+sum[i];
 			count=0;
-		num=0;
-		pos=1;
-
-		LCD_FINAL();
-		for(j=0;j<35000;j++);
-
-		final_val=0;
+			num=0;
+			pos=1;
+			LCD_FINAL();
+			for(j=0;j<35000;j++);
+			final_val=0;
 		}
 	LPC_GPIO0->FIOMASK=0X0;
 	flag=0;
@@ -204,45 +195,44 @@ void EINT3_IRQHandler(void)
 	 LPC_GPIOINT->IO0IntClr|=MASK_COLS;
 	}
 
-void init_IOInt()
-	{
-		LPC_GPIOINT->IO0IntEnR=MASK_COLS; // Enables Rising Edge External Interrupt for Column pins
-	}
-void init_ports()
-	{LPC_GPIO0->FIODIR|= 0X1F800000|0XF00; //sets P0.8 to P0.11 and P0.23 to P0.28 as O/P ports
-	}
+void init_IOInt(){
+	LPC_GPIOINT->IO0IntEnR=MASK_COLS; // Enables Rising Edge External Interrupt for Column pins
+}
+void init_ports(){
+	LPC_GPIO0->FIODIR|= 0X1F800000|0XF00; //sets P0.8 to P0.11 and P0.23 to P0.28 as O/P ports
+}
 
 void LCD_DATA1() //Stores "num" as a string and then displays it
 {
- sprintf(val,"%d",num);
- clr_disp();
+	sprintf(val,"%d",num);
+	clr_disp();
 
- temp1 = 0x80;
- lcd_com();
- delay_lcd(800);
+	temp1 = 0x80;
+	lcd_com();
+	delay_lcd(800);
 
- lcd_puts(&val[0]);
+	lcd_puts(&val[0]);
 
 }
 
 void LCD_ACCEPT() //clears the screen
 {
- clr_disp();
+	clr_disp();
 
- temp1 = 0x80;
- lcd_com();
- delay_lcd(800);
+	temp1 = 0x80;
+	lcd_com();
+	delay_lcd(800);
 }
 
 void LCD_FINAL() //To display the final sum
 {
 	clr_disp();
 
- temp1 = 0x80;
- lcd_com();
- delay_lcd(800);
+	temp1 = 0x80;
+	lcd_com();
+	delay_lcd(800);
 
- lcd_puts(&Msg[0]);
+	lcd_puts(&Msg[0]);
 
 	temp1=0XC0;
 	lcd_com();
@@ -255,51 +245,51 @@ void LCD_FINAL() //To display the final sum
 void lcd_init()
 {
      /* Ports initialized as GPIO */
-   LPC_PINCON->PINSEL1 &= 0xFC003FFF; //P0.23 to P0.28
+   	LPC_PINCON->PINSEL1 &= 0xFC003FFF; //P0.23 to P0.28
 
      /* Setting the directions as output */
-   LPC_GPIO0->FIODIR |= DT_CTRL;
-     LPC_GPIO0->FIODIR |= RS_CTRL;
-     LPC_GPIO0->FIODIR |= EN_CTRL;
+  	LPC_GPIO0->FIODIR |= DT_CTRL;
+    LPC_GPIO0->FIODIR |= RS_CTRL;
+    LPC_GPIO0->FIODIR |= EN_CTRL;
 
-   clear_ports();
-     delay_lcd(3200);
+   	clear_ports();
+    delay_lcd(3200);
 
-     temp2 = (0x30<<19);
-     wr_cn();
-     delay_lcd(30000);
+    temp2 = (0x30<<19);
+    wr_cn();
+    delay_lcd(30000);
 
-     temp2 = (0x30<<19);
-     wr_cn();
-     delay_lcd(30000);
+    temp2 = (0x30<<19);
+    wr_cn();
+    delay_lcd(30000);
 
-     temp2 = (0x30<<19);
-     wr_cn();
-     delay_lcd(30000);
+    temp2 = (0x30<<19);
+    wr_cn();
+    delay_lcd(30000);
 
-     temp2 = (0x20<<19);
-     wr_cn();
-     delay_lcd(30000);
+    temp2 = (0x20<<19);
+    wr_cn();
+    delay_lcd(30000);
 
-     temp1 = 0x28;
-     lcd_com();
-     delay_lcd(30000);
+    temp1 = 0x28;
+    lcd_com();
+    delay_lcd(30000);
 
-     temp1 = 0x0c;
-     lcd_com();
-     delay_lcd(800);
+    temp1 = 0x0c;
+    lcd_com();
+    delay_lcd(800);
 
-     temp1 = 0x06;
-     lcd_com();
-     delay_lcd(800);
+    temp1 = 0x06;
+    lcd_com();
+    delay_lcd(800);
 
-     temp1 = 0x01;
-     lcd_com();
+    temp1 = 0x01;
+    lcd_com();
     delay_lcd(10000);
 
-     temp1 = 0x80;
-     lcd_com();
-     delay_lcd(800);
+    temp1 = 0x80;
+    lcd_com();
+    delay_lcd(800);
    return;
 }
 
@@ -347,14 +337,14 @@ void lcd_data(void)
 // data nibble o/p routine
 void wr_dn(void)
 {
-     clear_ports();
+    clear_ports();
 
-     LPC_GPIO0->FIOPIN = temp2;      // Assign the value to the
+    LPC_GPIO0->FIOPIN = temp2;      // Assign the value to the
                                      //data lines
-     LPC_GPIO0->FIOSET = RS_CTRL;    // set bit RS
-     LPC_GPIO0->FIOSET = EN_CTRL;   // EN=1
-     delay_lcd(25);
-     LPC_GPIO0->FIOCLR = EN_CTRL;    // EN =0
+    LPC_GPIO0->FIOSET = RS_CTRL;    // set bit RS
+    LPC_GPIO0->FIOSET = EN_CTRL;   // EN=1
+    delay_lcd(25);
+    LPC_GPIO0->FIOCLR = EN_CTRL;    // EN =0
    return;
 }
 
@@ -367,17 +357,17 @@ void delay_lcd(unsigned int r1)
 
 void clr_disp(void)
 {
-     temp1 = 0x01;
-     lcd_com();
+    temp1 = 0x01;
+    lcd_com();
     delay_lcd(10000);
    return;
 }
 void clear_ports(void)
 {
    /* Clearing the lines at power on */
-     LPC_GPIO0->FIOCLR = DT_CTRL; //Clearing data lines
-     LPC_GPIO0->FIOCLR = RS_CTRL; //Clearing RS line
-     LPC_GPIO0->FIOCLR = EN_CTRL; //Clearing Enable line
+    LPC_GPIO0->FIOCLR = DT_CTRL; //Clearing data lines
+    LPC_GPIO0->FIOCLR = RS_CTRL; //Clearing RS line
+    LPC_GPIO0->FIOCLR = EN_CTRL; //Clearing Enable line
 
    return;
 }
