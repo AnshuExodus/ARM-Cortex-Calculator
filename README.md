@@ -12,7 +12,10 @@ Code: Calculator.c
 INSTRUCTIONS
 ------------
 
+
+
 KEIL UVISION 4
+--------------
 
 
 Create a new project in Keil uVision4 by selecting Project-> New uVision Project -> NXP-> LPC1768
@@ -28,6 +31,7 @@ Debug and press F7 to create a Hex file
 
 
 FLASH MAGIC
+-----------
 
 
 LPC1768
