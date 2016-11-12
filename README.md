@@ -9,8 +9,6 @@ Software needed:
 Code: Calculator.c
 
 ------------
-#INSTRUCTIONS
-
 
 
 
@@ -35,10 +33,15 @@ FLASH MAGIC
 
 
 LPC1768
+
 COM Port 1
+
 Baud Rate 9600
+
 Interface None (ISP)
+
 Oscillator 12 (MHz) 
+
 Load Hex File
 
 Start
