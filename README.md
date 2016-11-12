@@ -9,8 +9,8 @@ Software needed:
 Code: Calculator.c
 
 ------------
-INSTRUCTIONS
-------------
+#INSTRUCTIONS
+
 
 
 
